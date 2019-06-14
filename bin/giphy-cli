@@ -7,70 +7,116 @@ let GifCli = require("../lib")
   , IsThere = require("is-there")
   , program = require('commander')
   , GiphyCommand = require('../lib/giphy-commands')
+  , fs = require('fs')
+  , util = require('util')
   ;
+
 
 program
     .version('0.0.1')
     .description('View animated GIFs in the terminal using GIPHY')
     .option('-n, --no-loop', 'prevent looping endlessly')
     .option('-k, --key', 'GIPHY API Key, if needed.  If unspecified, will check env for GIPHY_API_KEY')
-    .option('-s, --search <query>', 'search for a gif')
-    .option('-r, --random [tag]', 'get a random gif, optionally limited by a tag')
-    .option('-i, --id [id]', 'get gif by its ID')
-    .option('-t, --translate <phrase>', 'translate')
-    .option('-i, --stickers', 'results should include stickers instead of gifs')
-    .option('-f, --file <filename>', 'displays the specified local file')
+    .option('-s, --stickers', 'results should include stickers instead of gifs.  This option only applies when using search, random, or translate.')
 ;
+// ToDo -- other possible options:
+//    specify rating
+//    specify frame timing in ms
+//    search-related:
+//       language specification (for search)
+//       sort (for search) (relevant / recent)
+//       top result only instead of random from top results
 
-program.parse(process.argv);
+
 
 const shouldLoop = program.loop;
 const giphyAPIKey = program.key || process.env.GIPHY_API_KEY;
 const giphyCommand = GiphyCommand(giphyAPIKey);
 const useStickers = program.stickers;
 
-// Process commands (GIPHY API stuff)
-if (program.search) {
-  giphyCommand.search(program.search, useStickers)
-    .then((tmpFile) => {
-      render(tmpFile);
-      // now delete tmpFile...
-    })
-} else if (program.translate) {
-  giphyCommand.translate(program.translate, useStickers)
-    .then((tmpFile) => {
-      render(tmpFile);
-      // now delete tmpFile...
-    })
-} else if (program.id) {
-  giphyCommand.byId(program.id)
-    .then((tmpFile) => {
-      render(tmpFile);
-      // now delete tmpFile...
-    })
-} else if (program.random) {
-  giphyCommand.random(program.random, useStickers)
-    .then((tmpFile) => {
-      render(tmpFile);
-      // now delete tmpFile...
-    })
-} else if (program.file) {
-  if (!IsThere(program.file)) {
-    return Logger.log(new Error(`The input file '${program.file}' doesn't exist.`));
-  } else {
-    render(program.file);
-  }
-  render(program.file);
-} else {
-  console.log(`Unknown or missing parameters.`);
-  program.help();
-  process.exit(0);
-}
+
+const renderAndCleanup = (tmpFile, shouldLoop) => {
+  //console.log(`renderAndCleanup -- program.loop = ${program.loop}`);
+  render(tmpFile, shouldLoop);
+  // this breaks shit.... can't delete the file until after program is about to exit or animation stops
+  // fs.unlink(tmpFile, (err) => {
+  //   if (err) throw err;
+  //   console.log(`tmp file '${tmpFile}' was deleted.`);
+  // });
+};
+
+
+program.command('search <query>')
+  .description('Search for a GIF.  A random image is selected from the top results.')
+  .action((query, cmd) => {
+    return giphyCommand.search(query, useStickers)//.then(renderAndCleanup);
+      .then((tmpFile) => {
+        render(tmpFile, shouldLoop);
+        // now delete tmpFile...
+      })
+
+  });
+
+program.command('translate <phrase>')
+  .description('translate the specified phrase into a GIF')
+  .action((phrase, cmd) => {
+    giphyCommand.translate(phrase, useStickers)
+      .then((tmpFile) => {
+        render(tmpFile, shouldLoop);
+        // now delete tmpFile...
+      })
+  });
+
+
+program.command('id <gifId>')
+  .description('Display a GIPHY gif by specifying its id')
+  .action((gifId, cmd) => {
+    giphyCommand.byId(program.id)
+      .then((tmpFile) => {
+        render(tmpFile, shouldLoop);
+        // now delete tmpFile...
+      })
+  });
+
+program.command('random')
+  .description('Display a random GIPHY gif')
+  .action(() => {
+    giphyCommand.random(program.random, useStickers)
+      .then((tmpFile) => {
+        render(tmpFile, shouldLoop);
+        // now delete tmpFile...
+      })
+  });
+
+program.command('open <file>')
+  .description('Opens and displays a local GIF file')
+  .action((file, cmd) => {
+    // console.log(`*****  cmd is ${util.inspect(cmd)}.  cmd.options.loop is ${cmd.options.loop}`);
+    // console.log(`*****  cmd.loop is ${cmd.loop}`);  // incorrect
+    //console.log(`*****  program.loop is ${program.loop}`);  // correct
+    if (!IsThere(file)) {
+      return Logger.log(new Error(`The input file '${file}' doesn't exist.`));
+    } else {
+      render(file, shouldLoop);
+    }
+  });
+
+
+program.command('url <gifURL>')
+  .description('Opens and displays a gif with the specified URL')
+  .action((gifURL, cmd) => {
+    giphyCommand.fromURL(gifURL)
+      .then((tmpFile) => {
+        render(tmpFile, shouldLoop);
+      })
+  });
+
+
+program.parse(process.argv);
 
 
 
-
-function render(filename) {
+function render(filename, loopEndlessly) {
     GifCli(filename, function (err, frames) {
         if (err) {
             return Logger.log(err, "error");
@@ -79,9 +125,17 @@ function render(filename) {
         const animation = new CliFrames();
         animation.load(frames);
         animation.start({
-            repeat: shouldLoop
+            repeat: loopEndlessly
           , delay: 50
+          // deleting the file via 'end' will remove it after it has looped 1 time.  This causes loops to only happen once.  Hmmm...
+          // , end: () => {
+          //     fs.unlink(filename, (err) => {
+          //       if (err) throw err;
+          //       console.log(`tmp file '${filename}' was deleted.`);
+          //     });
+          //   }
         });
+
     });
 }
 
