@@ -45,14 +45,12 @@ const renderAndCleanup = (tmpFile, shouldLoop) => {
   // });
 };
 
-
 program.command('search <query>')
   .description('Search for a GIF.  A random image is selected from the top results.')
   .action((query, cmd) => {
     return giphyCommand.search(query, useStickers)//.then(renderAndCleanup);
       .then((tmpFile) => {
         render(tmpFile, shouldLoop);
-        // now delete tmpFile...
       })
 
   });
@@ -63,7 +61,6 @@ program.command('translate <phrase>')
     giphyCommand.translate(phrase, useStickers)
       .then((tmpFile) => {
         render(tmpFile, shouldLoop);
-        // now delete tmpFile...
       })
   });
 
@@ -71,10 +68,9 @@ program.command('translate <phrase>')
 program.command('id <gifId>')
   .description('Display a GIPHY gif by specifying its id')
   .action((gifId, cmd) => {
-    giphyCommand.byId(program.id)
+    giphyCommand.byId(gifId)
       .then((tmpFile) => {
         render(tmpFile, shouldLoop);
-        // now delete tmpFile...
       })
   });
 
@@ -84,16 +80,21 @@ program.command('random')
     giphyCommand.random(program.random, useStickers)
       .then((tmpFile) => {
         render(tmpFile, shouldLoop);
-        // now delete tmpFile...
+      })
+  });
+
+program.command('trending')
+  .description('Display a trending GIPHY gif')
+  .action(() => {
+    giphyCommand.trending(useStickers)
+      .then((tmpFile) => {
+        render(tmpFile, shouldLoop);
       })
   });
 
 program.command('open <file>')
   .description('Opens and displays a local GIF file')
   .action((file, cmd) => {
-    // console.log(`*****  cmd is ${util.inspect(cmd)}.  cmd.options.loop is ${cmd.options.loop}`);
-    // console.log(`*****  cmd.loop is ${cmd.loop}`);  // incorrect
-    //console.log(`*****  program.loop is ${program.loop}`);  // correct
     if (!IsThere(file)) {
       return Logger.log(new Error(`The input file '${file}' doesn't exist.`));
     } else {
