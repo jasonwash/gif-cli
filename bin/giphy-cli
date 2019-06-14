@@ -27,12 +27,8 @@ program
 //       sort (for search) (relevant / recent)
 //       top result only instead of random from top results
 
-
-
-const shouldLoop = program.loop;
 const giphyAPIKey = program.key || process.env.GIPHY_API_KEY;
 const giphyCommand = GiphyCommand(giphyAPIKey);
-const useStickers = program.stickers;
 
 
 const renderAndCleanup = (tmpFile, shouldLoop) => {
@@ -48,9 +44,11 @@ const renderAndCleanup = (tmpFile, shouldLoop) => {
 program.command('search <query>')
   .description('Search for a GIF.  A random image is selected from the top results.')
   .action((query, cmd) => {
-    return giphyCommand.search(query, useStickers)//.then(renderAndCleanup);
+    console.log(`useStickers = '${program.stickers}', shouldLoop = '${program.loop}'`);
+
+    return giphyCommand.search(query, program.stickers)
       .then((tmpFile) => {
-        render(tmpFile, shouldLoop);
+        render(tmpFile, program.loop);
       })
 
   });
@@ -58,9 +56,9 @@ program.command('search <query>')
 program.command('translate <phrase>')
   .description('translate the specified phrase into a GIF')
   .action((phrase, cmd) => {
-    giphyCommand.translate(phrase, useStickers)
+    giphyCommand.translate(phrase, program.stickers)
       .then((tmpFile) => {
-        render(tmpFile, shouldLoop);
+        render(tmpFile, program.loop);
       })
   });
 
@@ -70,25 +68,25 @@ program.command('id <gifId>')
   .action((gifId, cmd) => {
     giphyCommand.byId(gifId)
       .then((tmpFile) => {
-        render(tmpFile, shouldLoop);
+        render(tmpFile, program.loop);
       })
   });
 
 program.command('random')
   .description('Display a random GIPHY gif')
   .action(() => {
-    giphyCommand.random(program.random, useStickers)
+    giphyCommand.random(program.random, program.stickers)
       .then((tmpFile) => {
-        render(tmpFile, shouldLoop);
+        render(tmpFile, program.loop);
       })
   });
 
 program.command('trending')
   .description('Display a trending GIPHY gif')
   .action(() => {
-    giphyCommand.trending(useStickers)
+    giphyCommand.trending(program.stickers)
       .then((tmpFile) => {
-        render(tmpFile, shouldLoop);
+        render(tmpFile, program.loop);
       })
   });
 
@@ -98,7 +96,7 @@ program.command('open <file>')
     if (!IsThere(file)) {
       return Logger.log(new Error(`The input file '${file}' doesn't exist.`));
     } else {
-      render(file, shouldLoop);
+      render(file, program.loop);
     }
   });
 
@@ -108,7 +106,7 @@ program.command('url <gifURL>')
   .action((gifURL, cmd) => {
     giphyCommand.fromURL(gifURL)
       .then((tmpFile) => {
-        render(tmpFile, shouldLoop);
+        render(tmpFile, program.loop);
       })
   });
 
