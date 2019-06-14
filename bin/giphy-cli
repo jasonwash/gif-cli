@@ -1,0 +1,91 @@
+#!/usr/bin/env node
+
+// Dependencies
+let GifCli = require("../lib")
+  , CliFrames = require("cli-frames")
+  , Logger = require("bug-killer")
+  , IsThere = require("is-there")
+  , program = require('commander')
+  , GiphyCommand = require('../lib/giphy-commands')
+  ;
+
+program
+    .version('0.0.1')
+    .description('View animated GIFs in the terminal using GIPHY')
+    .option('-n, --no-loop', 'prevent looping endlessly')
+    .option('-k, --key', 'GIPHY API Key, if needed.  If unspecified, will check env for GIPHY_API_KEY')
+    .option('-s, --search <query>', 'search for a gif')
+    .option('-r, --random [tag]', 'get a random gif, optionally limited by a tag')
+    .option('-i, --id [id]', 'get gif by its ID')
+    .option('-t, --translate <phrase>', 'translate')
+    .option('-i, --stickers', 'results should include stickers instead of gifs')
+    .option('-f, --file <filename>', 'displays the specified local file')
+;
+
+program.parse(process.argv);
+
+const shouldLoop = program.loop;
+const giphyAPIKey = program.key || process.env.GIPHY_API_KEY;
+const giphyCommand = GiphyCommand(giphyAPIKey);
+const useStickers = program.stickers;
+
+// Process commands (GIPHY API stuff)
+if (program.search) {
+  giphyCommand.search(program.search, useStickers)
+    .then((tmpFile) => {
+      render(tmpFile);
+      // now delete tmpFile...
+    })
+} else if (program.translate) {
+  giphyCommand.translate(program.translate, useStickers)
+    .then((tmpFile) => {
+      render(tmpFile);
+      // now delete tmpFile...
+    })
+} else if (program.id) {
+  giphyCommand.byId(program.id)
+    .then((tmpFile) => {
+      render(tmpFile);
+      // now delete tmpFile...
+    })
+} else if (program.random) {
+  giphyCommand.random(program.random, useStickers)
+    .then((tmpFile) => {
+      render(tmpFile);
+      // now delete tmpFile...
+    })
+} else if (program.file) {
+  if (!IsThere(program.file)) {
+    return Logger.log(new Error(`The input file '${program.file}' doesn't exist.`));
+  } else {
+    render(program.file);
+  }
+  render(program.file);
+} else {
+  console.log(`Unknown or missing parameters.`);
+  program.help();
+  process.exit(0);
+}
+
+
+
+
+function render(filename) {
+    // Crunch the input
+    //Logger.log("Crunching the gif animation.");
+
+    GifCli(filename, function (err, frames) {
+        if (err) {
+            return Logger.log(err, "error");
+        }
+
+        const animation = new CliFrames();
+        animation.load(frames);
+        animation.start({
+            repeat: shouldLoop
+          , delay: 50
+        });
+        // console.log(`animation complete...`);
+    });
+}
+

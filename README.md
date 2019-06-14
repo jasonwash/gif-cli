@@ -49,7 +49,7 @@ yarn add gif-cli
 
 ```js
 // Dependencies
-var GifCli = require("gif-cli")
+var GifCli = require("giphy-cli")
   , CliFrames = require("cli-frames")
   ;
 
