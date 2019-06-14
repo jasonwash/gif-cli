@@ -44,7 +44,7 @@ const renderAndCleanup = (tmpFile, shouldLoop) => {
 program.command('search <query>')
   .description('Search for a GIF.  A random image is selected from the top results.')
   .action((query, cmd) => {
-    console.log(`useStickers = '${program.stickers}', shouldLoop = '${program.loop}'`);
+    // console.log(`useStickers = '${program.stickers}', shouldLoop = '${program.loop}'`);
 
     return giphyCommand.search(query, program.stickers)
       .then((tmpFile) => {
