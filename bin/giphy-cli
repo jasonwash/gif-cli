@@ -71,9 +71,6 @@ if (program.search) {
 
 
 function render(filename) {
-    // Crunch the input
-    //Logger.log("Crunching the gif animation.");
-
     GifCli(filename, function (err, frames) {
         if (err) {
             return Logger.log(err, "error");
@@ -85,7 +82,6 @@ function render(filename) {
             repeat: shouldLoop
           , delay: 50
         });
-        // console.log(`animation complete...`);
     });
 }
 
