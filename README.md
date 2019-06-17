@@ -9,29 +9,44 @@ The main commandline script is `./bin/giphy-cli`
 Usage is:
 
 ```
-Usage: giphy-cli [options]
+Usage: giphy-cli [options] [command]
 
 View animated GIFs in the terminal using GIPHY
 
 Options:
-  -V, --version             output the version number
-  -n, --no-loop             prevent looping endlessly
-  -k, --key                 GIPHY API Key, if needed.  If unspecified, will check env for GIPHY_API_KEY
-  -s, --search <query>      search for a gif
-  -r, --random [tag]        get a random gif, optionally limited by a tag
-  -i, --id [id]             get gif by its ID
-  -t, --translate <phrase>  translate
-  -i, --stickers            results should include stickers instead of gifs
-  -f, --file <filename>     displays the specified local file
-  -h, --help                output usage information
+  -V, --version       output the version number
+  -n, --no-loop       prevent looping endlessly
+  -k, --key           GIPHY API Key, if needed.  If unspecified, will check env for GIPHY_API_KEY
+  -s, --stickers      results should include stickers instead of gifs.  This option only applies when using search, random, or translate.
+  -h, --help          output usage information
 
+Commands:
+  search <query>      Search for a GIF.  A random image is selected from the top results.
+  translate <phrase>  translate the specified phrase into a GIF
+  id <gifId>          Display a GIPHY gif by specifying its id
+  random              Display a random GIPHY gif
+  trending            Display a trending GIPHY gif
+  open <file>         Opens and displays a local GIF file
+  url <gifURL>        Opens and displays a gif with the specified URL
 ```
 
+# Caveats for Mac 
+
+Just a quick note from my personal experience....
+
+Start by doing 
+```
+brew install gifsicle
+brew install graphicsmagick
+```
+before you do npm -g install.
 
 ---------------------------
+---------------------------
 
-## Everything Below This Line is From the Original Repo's README.md
+# Everything Below This Line is From the Original Repo's README.md
 
+---------------------------
 ---------------------------
 
 
